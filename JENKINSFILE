@@ -21,7 +21,6 @@ pipeline {
 
     stage('Tests')
     {
-        agent none
         parallel {
             stage('Unit') {
                 agent {label 'win'}
