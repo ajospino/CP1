@@ -6,7 +6,7 @@ pipeline {
             agent {label 'nux'}
             steps {
                 // Obtener código del repo
-                git 'https://github.com/anieto-unir/helloworld.git'
+                git clone 'https://github.com/anieto-unir/helloworld.git'
             }
         }
 
