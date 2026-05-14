@@ -30,7 +30,7 @@ pipeline {
                                 set PYTHONPATH=%WORKSPACE%
                                 pytest --junitxml=result-unit.xml test\\unit
                         '''
-						stash{name:'unit-test' include:'result-unit.xml'}
+						stash name:'unit-test', include:'result-unit.xml'
                     }
                 }
             }
@@ -46,7 +46,7 @@ pipeline {
                         set PYTHONPATH=%WORKSPACE%
                         pytest --junitxml=result-rest.xml test\\rest
                     '''
-					stash{ name:'rest-test' include:'result-rest.xml'}
+					stash name:'rest-test', include:'result-rest.xml'
                 }    
             }    
         }
