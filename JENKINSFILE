@@ -1,17 +1,15 @@
 pipeline {
-    agent none
+    agent any
 
      stages {
         stage('Get Code') {
-            agent {label 'nux'}
             steps {
                 // Obtener código del repo
-                git 'https://github.com/anieto-unir/helloworld.git'
+                git 'https://github.com/ajospino/CP1.git'
             }
         }
 
     stage('Build') {
-        agent {label 'win'}
         steps {
             echo 'Eyyyy, esto es Python. No hay que compilar nada!!!'
 	    echo WORKSPACE
@@ -22,21 +20,19 @@ pipeline {
     stage('Tests')
     {
         parallel {
+
             stage('Unit') {
-                agent {label 'win'}
                 steps {
                     catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                         bat '''
                                 set PYTHONPATH=%WORKSPACE%
                                 pytest --junitxml=result-unit.xml test\\unit
                         '''
-						stash name:'unit-test', includes:'result-unit.xml'
                     }
                 }
             }
             
             stage('Rest') {
-                agent {label 'win'}
                 steps {
                     bat '''
                         set FLASK_APP=app\\api.py
@@ -46,17 +42,13 @@ pipeline {
                         set PYTHONPATH=%WORKSPACE%
                         pytest --junitxml=result-rest.xml test\\rest
                     '''
-					stash name:'rest-test', includes:'result-rest.xml'
                 }    
             }    
         }
     }
     
     stage ('Results') {
-        agent {label 'nux'}
         steps {
-			unstash name:'rest-test'
-			unstash name:'unit-test'
             junit 'result*.xml'
         }
     }

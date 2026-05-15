@@ -1,0 +1,97 @@
+pipeline {
+    agent none
+
+     stages {
+        stage('Get Code') {
+            agent {label 'nux'}
+            steps {
+                // Obtener código del repo
+                git 'https://github.com/ajospino/CP1.git'
+            }
+        }
+
+        stage('Tests')
+        {
+            agent {label 'win'}
+            
+            parallel {
+                stage('Unit and Coverage') {
+                    steps {
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat '''
+                                    set PYTHONPATH=%WORKSPACE%
+                                    coverage run -m pytest --junitxml=result-unit.xml test\\unit
+                                    coverage xml -o result-coverage.xml
+                            '''
+                            stash name:'unit-test', includes:'result-unit.xml'
+                            stash name:'coverage-test', includes:'result-coverage.xml'
+                        }
+                    }
+                }
+                
+                stage('Rest') {
+                    steps {
+                        bat '''
+                            set FLASK_APP=app\\api.py
+                            set FLASK_ENV=development
+                            start flask run
+                            start java -jar C:\\Users\\Admin\\Documents\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
+                            set PYTHONPATH=%WORKSPACE%
+                            pytest --junitxml=result-rest.xml test\\rest
+                        '''
+                        stash name:'rest-test', includes:'result-rest.xml'
+                    }    
+                }   
+
+                stage('Static') {
+                    steps {
+                        catchError(buildResult:'UNSTABLE' ,stageResult: 'UNSTABLE') {
+                            bat 'flake8 --output-file=result-static.xml app/'
+                        }
+                        stash name:'static-test', includes:'result-static.xml'
+                    }    
+                }
+
+                stage('Security') {
+                    steps {
+                        bat '''
+                            bandit -r app/ -f xml -o result-security.xml
+                        '''
+                        stash name:'security-test', includes:'result-security.xml'
+                    }    
+                } 
+                stage('Performance') {
+                    steps {
+                        bat '''
+                            jmeter -n -t jmeter/flask.jmx -l result-performance.xml
+                        '''
+                        stash name:'performance-test', includes:'result-performance.xml'
+                    }    
+                } 
+            }
+        }
+    
+    stage ('Results') {
+        agent {label 'nux'}
+        steps {
+			unstash name:'rest-test'
+			unstash name:'unit-test'
+            unstash name:'security-test'
+            unstash name:'performance-test'
+            
+            junit 'result*.xml'
+
+            recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'result-coverage.xml'], [parser: 'JUNIT', pattern: 'result-unit.xml'], [parser: 'JUNIT', pattern: 'result-rest.xml']])
+        }
+    }
+  }
+    post {
+            // Clean after build
+        always {
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true)
+        }
+    }
+}
