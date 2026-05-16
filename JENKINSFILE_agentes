@@ -10,7 +10,7 @@ pipeline {
             }
         }
 
-        stage('Tests')
+        stage('Tests on Windows')
         {
             parallel {
                 stage('Unit and Coverage') {
@@ -52,13 +52,13 @@ pipeline {
                 }   
             } 
 
+        }
+        stage ('Tests on Linux'){
             parallel {
                   stage('Static') {
                     agent {label 'nux'}
                     steps {
-                        catchError(buildResult:'SUCCESS' , stageResult: 'UNSTABLE') {
-                            sh 'python -m flake8 --exit-zero --output-file=result-static.xml app/'
-                        }
+                        sh 'python -m flake8 --exit-zero --output-file=result-static.xml app/'
                         recordIssues tools: [flake8(pattern: 'result-static.xml')], qualityGates:[[threshold: 8, type: 'TOTAL', unstable: true]], unhealthy: 10 
 
                     }    
