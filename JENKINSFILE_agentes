@@ -10,7 +10,7 @@ pipeline {
             }
         }
 
-        stage('Tests on Windows')
+        stage('Tests')
         {
             parallel {
                 stage('Unit and Coverage') {
@@ -48,17 +48,13 @@ pipeline {
                             set FLASK_APP=app\\api.py
                             set FLASK_ENV=development
                             start flask run
-                            jmeter -n -t test/jmeter/flask.jmx -l result-performance.xml
+                            jmeter -n -t test/jmeter/cp1-2_testrun.jmx -l result-performance.xml
                         '''
                         perfReport 'result-performance.xml'
                     }    
-                }   
-            } 
+                }
 
-        }
-        stage ('Tests on Linux'){
-            parallel {
-                  stage('Static') {
+                stage('Static') {
                     agent {label 'nux'}
                     steps {
                         sh 'python -m flake8 --exit-zero --output-file=result-static.xml app/'
@@ -73,8 +69,9 @@ pipeline {
                         sh 'python -m bandit -r app/ -f xml -o result-security.xml'
                         recordIssues tools: [pyLint(name:'Security', pattern: 'result-security.xml')], qualityGates:[[threshold: 2, type: 'TOTAL', unstable: true]], unhealthy: 4
                     }    
-                } 
-            }
+                }   
+            } 
+
         }
   }
     post {
