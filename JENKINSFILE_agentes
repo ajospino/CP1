@@ -35,6 +35,7 @@ pipeline {
                             set FLASK_ENV=development
                             start flask run
                             start %wiremock% --root-dir test\\wiremock
+                            sleep 5
                             pytest --junitxml=result-rest.xml test\\rest
                         '''
                     }    
