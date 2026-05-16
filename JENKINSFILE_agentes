@@ -26,7 +26,18 @@ pipeline {
                         recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'result-coverage.xml'], [parser: 'JUNIT', pattern: 'result-unit.xml']])
                     }
                 }
-                
+
+                stage('Rest') {
+                    agent {label 'win'}
+                    steps {
+                        bat '''
+                            start java -jar C:\\Users\\Admin\\Documents\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
+                            pytest --junitxml=result-rest.xml test\\rest
+                        '''
+                        recordCoverage(tools: [[parser: 'JUNIT', pattern: 'result-rest.xml']])
+                    }    
+                }
+
                 stage('Performance') {
                     agent {label 'win'}
                     steps {
@@ -37,17 +48,6 @@ pipeline {
                             jmeter -n -t test/jmeter/flask.jmx -l result-performance.xml
                         '''
                         perfReport 'result-performance.xml'
-                    }    
-                }
-
-                stage('Rest') {
-                    agent {label 'win'}
-                    steps {
-                        bat '''
-                            start java -jar C:\\Users\\Admin\\Documents\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
-                            pytest --junitxml=result-rest.xml test\\rest
-                        '''
-                        recordCoverage(tools: [[parser: 'JUNIT', pattern: 'result-rest.xml']])
                     }    
                 }   
             } 
