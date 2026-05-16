@@ -12,10 +12,9 @@ pipeline {
 
         stage('Tests')
         {
-            agent {label 'win'}
-            
             parallel {
                 stage('Unit and Coverage') {
+                    agent {label 'win'}
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
@@ -29,6 +28,7 @@ pipeline {
                 }
                 
                 stage('Performance') {
+                    agent {label 'win'}
                     steps {
                         bat '''
                             set FLASK_APP=app\\api.py
@@ -41,6 +41,7 @@ pipeline {
                 }
 
                 stage('Rest') {
+                    agent {label 'win'}
                     steps {
                         bat '''
                             start java -jar C:\\Users\\Admin\\Documents\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
@@ -51,9 +52,10 @@ pipeline {
                 }   
 
                 stage('Static') {
+                    agent {label 'nux'}
                     steps {
                         catchError(buildResult:'null' , stageResult: 'UNSTABLE') {
-                            bat 'flake8 --exit-zero --output-file=result-static.xml app/'
+                            sh 'python -m flake8 --exit-zero --output-file=result-static.xml app/'
                         }
                         recordIssues tools: [flake8(pattern: 'result-static.xml')], qualityGates:[[threshold: 8, type: 'TOTAL', unstable: true]], unhealthy: 10 
 
@@ -61,10 +63,9 @@ pipeline {
                 }
 
                 stage('Security') {
+                    agent {label 'nux'}
                     steps {
-                        bat '''
-                            bandit -r app/ -f xml -o result-security.xml
-                        '''
+                        sh 'python -m bandit -r app/ -f xml -o result-security.xml'
                         recordIssues tools: [pyLint(name:'Security', pattern: 'result-security.xml')], qualityGates:[[threshold: 2, type: 'TOTAL', unstable: true]], unhealthy: 4
                     }    
                 } 
