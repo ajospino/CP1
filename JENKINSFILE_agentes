@@ -50,11 +50,13 @@ pipeline {
                         recordCoverage(tools: [[parser: 'JUNIT', pattern: 'result-rest.xml']])
                     }    
                 }   
+            } 
 
-                stage('Static') {
+            parallel {
+                  stage('Static') {
                     agent {label 'nux'}
                     steps {
-                        catchError(buildResult:'null' , stageResult: 'UNSTABLE') {
+                        catchError(buildResult:'SUCCESS' , stageResult: 'UNSTABLE') {
                             sh 'python -m flake8 --exit-zero --output-file=result-static.xml app/'
                         }
                         recordIssues tools: [flake8(pattern: 'result-static.xml')], qualityGates:[[threshold: 8, type: 'TOTAL', unstable: true]], unhealthy: 10 
@@ -69,7 +71,7 @@ pipeline {
                         recordIssues tools: [pyLint(name:'Security', pattern: 'result-security.xml')], qualityGates:[[threshold: 2, type: 'TOTAL', unstable: true]], unhealthy: 4
                     }    
                 } 
-            } 
+            }
         }
   }
     post {
