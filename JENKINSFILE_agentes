@@ -52,8 +52,14 @@ pipeline {
                         '''
                         perfReport 'result-performance.xml'
                     }    
+                } post {
+                    always {
+                        cleanWs(cleanWhenNotBuilt: true,
+                                disableDeferredWipeout: true,
+                                deleteDirs: true,
+                                notFailBuild: false)
+                    }
                 }
-
                 stage('Static') {
                     agent {label 'nux'}
                     steps {
@@ -76,12 +82,12 @@ pipeline {
   }
     post {
         always {
+            
             node('nux'){
-                cleanWs(cleanWhenNotBuilt: true,
+               cleanWs(cleanWhenNotBuilt: true,
                     disableDeferredWipeout: true,
                     deleteDirs: true,
-                    notFailBuild: false)
-            
+                    notFailBuild: false) 
             }
             
             node('win'){
