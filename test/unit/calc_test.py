@@ -26,7 +26,7 @@ class TestCalculate(unittest.TestCase):
         self.assertEqual(1, self.calc.divide(2, 2))
         self.assertEqual(1.5, self.calc.divide(3, 2))
         self.assertRaises(TypeError, self.calc.divide, "2", 2)
-        self.assertRaises(TypeError, self.calc.divide(1, 0))
+        self.assertRaises(TypeError, self.calc.divide, 1, 0)
         self.assertRaises(-1, self.calc.divide(1, -1))
         self.assertRaises(-1, self.calc.divide(-1, 1))
         self.assertRaises(1, self.calc.divide(-1, -1))
