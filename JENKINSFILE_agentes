@@ -22,6 +22,7 @@ pipeline {
                                 python -m coverage xml -o result-coverage.xml
                             '''
                         }
+                        junit testResults: 'result-unit.xml'
                         recordCoverage qualityGates: [[criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0], [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0], [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0], [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]], tools: [[parser: 'COBERTURA', pattern: 'result-coverage.xml'], [parser: 'JUNIT', pattern: 'result-unit.xml']]
                         sh 'whoami'
                         sh 'hostname'
