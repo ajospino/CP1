@@ -1,7 +1,7 @@
 pipeline {
     agent none
 
-     stages {
+    stages {
         stage('Get Code') {
             agent {label 'nux'}
             steps {
@@ -12,70 +12,68 @@ pipeline {
 
         stage('Tests')
         {
-            agent {label 'win'}
-            
             parallel {
                 stage('Unit and Coverage') {
+                    agent {label 'win'}
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
                                 set PYTHONPATH=%WORKSPACE%
-                                coverage run -m pytest --junitxml=result-unit.xml test\\unit
+                                coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
                                 coverage xml -o result-coverage.xml
                             '''
                         }
-                        recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'result-coverage.xml'], [parser: 'JUNIT', pattern: 'result-unit.xml']])
+                        recordCoverage qualityGates: [[criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0], [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0], [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0], [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]], tools: [[parser: 'COBERTURA', pattern: 'result-coverage.xml'], [parser: 'JUNIT', pattern: 'result-unit.xml']]
                     }
                 }
-                
-                stage('Performance') {
+
+                stage('Rest') {
+                    agent {label 'win'}
                     steps {
                         bat '''
                             set FLASK_APP=app\\api.py
                             set FLASK_ENV=development
                             start flask run
-                            jmeter -n -t test/jmeter/flask.jmx -l result-performance.xml
+                            start %wiremock% --root-dir test\\wiremock
+                            sleep 5
+                            pytest --junitxml=result-rest.xml test\\rest
                         '''
-                        perfReport 'result-performance.xml'
+                        cleanWs()
                     }    
                 }
 
-                stage('Rest') {
+                stage('Performance') {
+                    agent {label 'win'}
                     steps {
                         bat '''
-                            start java -jar C:\\Users\\Admin\\Documents\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
-                            pytest --junitxml=result-rest.xml test\\rest
+                            set FLASK_APP=app\\api.py
+                            set FLASK_ENV=development
+                            start flask run
+                            jmeter -n -t test/jmeter/cp1-2_testrun.jmx -l result-performance.xml
                         '''
-                        recordCoverage(tools: [[parser: 'JUNIT', pattern: 'result-rest.xml']])
+                        perfReport 'result-performance.xml'
+                        cleanWs()
                     }    
-                }   
+                } 
 
                 stage('Static') {
+                    agent {label 'nux'}
                     steps {
-                        catchError(buildResult:'null' , stageResult: 'UNSTABLE') {
-                            bat 'flake8 --exit-zero --output-file=result-static.xml app/'
-                        }
+                        sh 'python -m flake8 --exit-zero --output-file=result-static.xml app/'
                         recordIssues tools: [flake8(pattern: 'result-static.xml')], qualityGates:[[threshold: 8, type: 'TOTAL', unstable: true]], unhealthy: 10 
-
+                        cleanWs()
                     }    
                 }
 
                 stage('Security') {
+                    agent {label 'nux'}
                     steps {
-                        bat '''
-                            bandit -r app/ -f xml -o result-security.xml
-                        '''
+                        sh 'python -m bandit -r app/ -f xml -o result-security.xml'
                         recordIssues tools: [pyLint(name:'Security', pattern: 'result-security.xml')], qualityGates:[[threshold: 2, type: 'TOTAL', unstable: true]], unhealthy: 4
+                        cleanWs()
                     }    
-                } 
+                }   
             } 
-        }
-  }
-    post {
-        always {
-            cleanWs(cleanWhenNotBuilt: false,
-                    deleteDirs: true,
-                    notFailBuild: true)
         }
     }
 }
