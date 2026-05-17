@@ -62,9 +62,6 @@ pipeline {
                             sleep 5
                             pytest --junitxml=result-rest.xml test\\rest
                         '''
-                        
-                        cleanWs notFailBuild: true
-                        
                         bat 'whoami'
                         bat 'hostname'
                         echo WORKSPACE
@@ -82,9 +79,6 @@ pipeline {
                             jmeter -n -t test/jmeter/cp1-2_testrun.jmx -l result-performance.xml
                         '''
                         perfReport 'result-performance.xml'
-
-                        cleanWs notFailBuild: true
-
                         bat 'whoami'
                         bat 'hostname'
                         echo WORKSPACE
@@ -95,15 +89,29 @@ pipeline {
         
         stage('Cleanup'){
             parallel{
-                stage('Clear Workspace 1'){
+                stage('Clear Workspace for Linux Agent 1'){
                     agent {label 'nux'}
                     steps{
                         cleanWs notFailBuild: true 
                     }
                 }
 
-                stage('Clear Workspace 2'){
+                stage('Clear Workspace for Linux Agent 2'){
                     agent {label 'nux'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+                stage('Clear Workspace for Windows Agent 1'){
+                    agent {label 'win'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+                stage('Clear Workspace for Windows Agent 2'){
+                    agent {label 'win'}
                     steps{
                         cleanWs notFailBuild: true 
                     }
