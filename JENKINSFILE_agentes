@@ -89,5 +89,37 @@ pipeline {
   
             } 
         }
+        stage('Cleanup'){
+            parallel{
+                stage('Clear Workspace for Linux Agent 1'){
+                    agent {label 'nux'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+                stage('Clear Workspace for Linux Agent 2'){
+                    agent {label 'nux'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+                stage('Clear Workspace for Windows Agent 1'){
+                    agent {label 'win'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+                stage('Clear Workspace for Windows Agent 2'){
+                    agent {label 'win'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+            }
+        }
     }
 }
