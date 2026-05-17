@@ -38,6 +38,8 @@ pipeline {
                         sh 'whoami'
                         sh 'hostname'
                         echo WORKSPACE
+                        sleep 15
+                        cleanWs()
                     }    
                 }
 
@@ -45,10 +47,12 @@ pipeline {
                     agent {label 'nux'}
                     steps {
                         sh 'python -m bandit -r app/ -f xml -o result-security.xml'
-                        recordIssues tools: [pyLint(name:'Security', pattern: 'result-security.xml')], qualityGates:[[threshold: 2, type: 'TOTAL', unstable: true]], unhealthy: 4
+                        recordIssues tools: [pyLint(name:'Security', pattern: 'result-security.xml')], qualityGates:[[threshold: 2, type: 'TOTAL', unstable: true]], unhealthy: 4                        
                         sh 'whoami'
                         sh 'hostname'
                         echo WORKSPACE
+                        sleep 15
+                        cleanWs()
                     }    
                 }
 
@@ -63,6 +67,9 @@ pipeline {
                             sleep 5
                             pytest --junitxml=result-rest.xml test\\rest
                         '''
+                        
+                        cleanWs()
+                        
                         bat 'whoami'
                         bat 'hostname'
                         echo WORKSPACE
@@ -80,6 +87,9 @@ pipeline {
                             jmeter -n -t test/jmeter/cp1-2_testrun.jmx -l result-performance.xml
                         '''
                         perfReport 'result-performance.xml'
+
+                        cleanWs()
+
                         bat 'whoami'
                         bat 'hostname'
                         echo WORKSPACE
