@@ -28,7 +28,6 @@ pipeline {
                         echo WORKSPACE
                     }
                 }
-
                 
                 stage('Static') {
                     agent {label 'nux'}
@@ -38,8 +37,6 @@ pipeline {
                         sh 'whoami'
                         sh 'hostname'
                         echo WORKSPACE
-                        sleep 15
-                        cleanWs notFailBuild: true
                     }    
                 }
 
@@ -51,8 +48,6 @@ pipeline {
                         sh 'whoami'
                         sh 'hostname'
                         echo WORKSPACE
-                        sleep 15
-                        cleanWs notFailBuild: true
                     }    
                 }
 
@@ -95,8 +90,26 @@ pipeline {
                         echo WORKSPACE
                     }    
                 } 
-  
             } 
+        }
+        
+        stage('Cleanup'){
+            parallel{
+                stage('Clear Workspace 1'){
+                    agent {label 'nux'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+                stage('Clear Workspace 2'){
+                    agent {label 'nux'}
+                    steps{
+                        cleanWs notFailBuild: true 
+                    }
+                }
+
+            }
         }
     }
 }
