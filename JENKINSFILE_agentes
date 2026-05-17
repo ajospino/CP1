@@ -39,7 +39,7 @@ pipeline {
                         sh 'hostname'
                         echo WORKSPACE
                         sleep 15
-                        cleanWs()
+                        cleanWs notFailBuild: true
                     }    
                 }
 
@@ -52,7 +52,7 @@ pipeline {
                         sh 'hostname'
                         echo WORKSPACE
                         sleep 15
-                        cleanWs()
+                        cleanWs notFailBuild: true
                     }    
                 }
 
@@ -68,7 +68,7 @@ pipeline {
                             pytest --junitxml=result-rest.xml test\\rest
                         '''
                         
-                        cleanWs()
+                        cleanWs notFailBuild: true
                         
                         bat 'whoami'
                         bat 'hostname'
@@ -88,7 +88,7 @@ pipeline {
                         '''
                         perfReport 'result-performance.xml'
 
-                        cleanWs()
+                        cleanWs notFailBuild: true
 
                         bat 'whoami'
                         bat 'hostname'
