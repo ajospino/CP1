@@ -77,17 +77,20 @@ pipeline {
   }
     post {
         always {
-            agent {label 'nux'}
-            cleanWs(cleanWhenNotBuilt: true,
+            node('nux'){
+                cleanWs(cleanWhenNotBuilt: true,
                     disableDeferredWipeout: true,
                     deleteDirs: true,
                     notFailBuild: false)
             
-            agent {label 'win'}
-            cleanWs(cleanWhenNotBuilt: true,
+            }
+            
+            node('win'){
+                cleanWs(cleanWhenNotBuilt: true,
                     disableDeferredWipeout: true,
                     deleteDirs: true,
                     notFailBuild: false)
+            }
         }
     }
 }
