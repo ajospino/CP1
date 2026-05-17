@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
 
      stages {
         stage('Get Code') {
@@ -77,7 +77,15 @@ pipeline {
   }
     post {
         always {
-            cleanWs(cleanWhenNotBuilt: false,
+            agent {label 'nux'}
+            cleanWs(cleanWhenNotBuilt: true,
+                    disableDeferredWipeout: true,
+                    deleteDirs: true,
+                    notFailBuild: false)
+            
+            agent {label 'win'}
+            cleanWs(cleanWhenNotBuilt: true,
+                    disableDeferredWipeout: true,
                     deleteDirs: true,
                     notFailBuild: false)
         }
